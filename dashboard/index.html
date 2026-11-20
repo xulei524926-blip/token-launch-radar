@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Launch Radar</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true"></div>
+    <div>
+      <h1>Token Launch Radar</h1>
+      <p class="tagline">Protocols that record no token yet, ranked by the value a launch would imply.</p>
+    </div>
+  </div>
+  <div class="stats" id="stats"></div>
+</header>
+
+<section class="model-band" id="model-band"></section>
+
+<section class="toolbar">
+  <input id="q" type="search" placeholder="Search protocol, category or chain" autocomplete="off">
+  <select id="chain"><option value="">All chains</option></select>
+  <select id="category"><option value="">All categories</option></select>
+  <label class="check"><input id="watch" type="checkbox"> Watchlist only</label>
+  <span class="count" id="count"></span>
+</section>
+
+<main>
+  <table class="board" id="board">
+    <thead>
+      <tr>
+        <th data-key="rank" class="num sortable">#</th>
+        <th data-key="name" class="sortable">Protocol</th>
+        <th data-key="category" class="sortable">Category</th>
+        <th>Chains</th>
+        <th data-key="tvl_usd" class="num sortable">TVL</th>
+        <th data-key="change_7d" class="num sortable">7d</th>
+        <th data-key="age_days" class="num sortable">Age</th>
+        <th data-key="multiple" class="num sortable">Peer x</th>
+        <th data-key="implied_value_usd" class="num sortable">Implied value</th>
+        <th>Farm cost</th>
+        <th>Farm time</th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <p class="empty" id="empty" hidden>No protocol matches this filter. Loosen it - the radar only ranks what the snapshot records.</p>
+</main>
+
+<aside class="detail" id="detail" hidden></aside>
+<div class="scrim" id="scrim" hidden></div>
+
+<footer>
+  <p id="foot"></p>
+</footer>
+
+<script src="../data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
