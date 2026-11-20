@@ -105,7 +105,7 @@
         '<td class="num">' + money(r.tvl_usd) + '</td>' +
         '<td class="num">' + pct(r.change_7d) + '</td>' +
         '<td class="num">' + age(r.age_days) + '</td>' +
-        '<td class="num">' + r.multiple.toFixed(2) + 'x</td>' +
+        '<td class="num">' + r.multiple.toFixed(2) + 'x<span class="pn">' + (r.peer_count > 0 ? r.peer_count + (r.peer_count === 1 ? ' peer' : ' peers') : 'global only') + '</span></td>' +
         '<td class="num implied">' + money(r.implied_value_usd) + '</td>' +
         '<td class="farm">' + esc(r.farm_cost_usd) + '</td>' +
         '<td class="farm">' + esc(r.farm_weeks) + '</td>' +
@@ -121,30 +121,45 @@
   }
 
   /* detail view: the arithmetic, the peers it came from, the farm plan */
+  function signedPct(f) {
+    var p = Math.round((f - 1) * 100);
+    return (p > 0 ? '+' : '') + p + '%';
+  }
   function openDetail(slug) {
     var r = null;
     R.rows.forEach(function (x) { if (x.slug === slug) r = x; });
     if (!r) return;
+    var catRows = R.rows.filter(function (x) { return x.category === r.category; });
+    var catRank = catRows.filter(function (x) { return x.rank < r.rank; }).length + 1;
+    var peerNote = r.peer_count > 0
+      ? '<p class="note">Category median ' + r.category_median.toFixed(2) + 'x from ' + r.peer_count + ' trading peer' + (r.peer_count === 1 ? '' : 's') +
+        ', shrunk toward the global ' + R.global_multiple.toFixed(2) + 'x to the ' + r.multiple.toFixed(2) + 'x used above.' +
+        (r.peer_count > r.peers.length ? ' The table shows the ' + r.peers.length + ' largest by market cap.' : '') + '</p>'
+      : '<p class="note">No protocol in this category has a priced token in the snapshot, so the global peer multiple (' + R.global_multiple.toFixed(2) +
+        'x) was used on its own. Treat this row\'s implied value as the board\'s roughest estimate.</p>';
     var peers = r.peers.length
       ? '<table class="peers"><thead><tr><th>Trading peer</th><th class="num">TVL</th><th class="num">Market cap</th><th class="num">Cap / TVL</th></tr></thead><tbody>' +
         r.peers.map(function (p) {
           return '<tr><td>' + esc(p.name) + (p.symbol ? ' (' + esc(p.symbol) + ')' : '') + '</td><td class="num">' + money(p.tvl_usd) + '</td><td class="num">' + money(p.mcap_usd) + '</td><td class="num">' + p.multiple.toFixed(2) + 'x</td></tr>';
         }).join('') + '</tbody></table>'
-      : '<p class="note">No protocol in this category has a priced token in the snapshot, so the global peer multiple was used.</p>';
+      : '';
     $('detail').innerHTML =
       '<button class="close" id="close" aria-label="Close">x</button>' +
       '<h2>' + esc(r.name) + (r.watchlist ? '<span class="badge">WATCHLIST</span>' : '') + '</h2>' +
       '<p class="sub">Rank #' + r.rank + ' - ' + esc(r.category || 'Uncategorised') + ' - ' + esc(r.chains.join(', ')) +
       '<br>Records no token in the snapshot of ' + esc(R.as_of) + (r.listed_at ? '; tracked since ' + esc(r.listed_at) : '') + '.</p>' +
       '<div class="math">TVL ' + money(r.tvl_usd) + ' x peer ' + r.multiple.toFixed(2) + 'x x momentum ' + r.momentum.toFixed(2) +
-      ' x maturity ' + r.maturity.toFixed(2) + ' = <span class="result">' + money(r.implied_value_usd) + '</span> implied launch value</div>' +
+      ' x maturity ' + r.maturity.toFixed(2) + ' = <span class="result">' + money(r.implied_value_usd) + '</span> implied launch value' +
+      '<div class="factors">Momentum contributes ' + signedPct(r.momentum) + ' and maturity ' + signedPct(r.maturity) + ' to this figure; divide either factor back out to see the value without it.</div></div>' +
       '<div class="kv">' +
       '<div><span>TVL</span><b>' + money(r.tvl_usd) + '</b></div>' +
       '<div><span>7-day TVL change</span><b>' + (r.change_7d == null ? 'n/a' : r.change_7d.toFixed(1) + '%') + '</b></div>' +
       '<div><span>Time with no token</span><b>' + age(r.age_days) + '</b></div>' +
       '<div><span>Implied / TVL</span><b>' + (r.implied_value_usd / r.tvl_usd).toFixed(2) + 'x</b></div>' +
+      '<div><span>Rank in category</span><b>#' + catRank + ' of ' + catRows.length + ' on the board</b></div>' +
+      '<div><span>Peers behind multiple</span><b>' + (r.peer_count > 0 ? r.peer_count + ' trading' : 'none - global only') + '</b></div>' +
       '</div>' +
-      '<h3>Where the multiple comes from</h3>' + peers +
+      '<h3>Where the multiple comes from</h3>' + peerNote + peers +
       '<h3>Farm plan</h3>' +
       '<p class="note">Budget: ' + esc(r.farm_cost_usd) + ' - Season: ' + esc(r.farm_weeks) + '. Nothing here guarantees a token or an allocation; it is the work a genuine early user would be doing anyway.</p>' +
       '<ol class="steps">' + r.farm_steps.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol>';
